@@ -7,6 +7,6 @@ def build_path(segment, running_on_floydhub=False):
     """
     
     if running_on_floydhub:
-        return '/floyd/data/{}'.format(segment)
+        return '/floyd/input/data/{}'.format(segment)
     else:
         return 'data/{}'.format(segment)
