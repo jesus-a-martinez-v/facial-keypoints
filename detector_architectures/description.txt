@@ -1,0 +1,1 @@
+These are the files corresponding to the Haar Cascade architecture used by OpenCV.
