@@ -9,7 +9,9 @@ import cv2
 
 
 class FacialKeypointsDataset(Dataset):
-    """Face Landmarks dataset."""
+    """
+    Face Landmarks dataset.
+    """
 
     def __init__(self, csv_file, root_dir, transform=None):
         """
@@ -33,7 +35,7 @@ class FacialKeypointsDataset(Dataset):
         image = mpimg.imread(image_name)
         
         # if image has an alpha color channel, get rid of it
-        if(image.shape[2] == 4):
+        if image.shape[2] == 4:
             image = image[:,:,0:3]
         
         key_pts = self.key_pts_frame.iloc[idx, 1:].as_matrix()
@@ -47,10 +49,12 @@ class FacialKeypointsDataset(Dataset):
     
 
     
-# tranforms
+# Tranforms
 
 class Normalize(object):
-    """Convert a color image to grayscale and normalize the color range to [0,1]."""        
+    """
+    Convert a color image to grayscale and normalize the color range to [0,1].
+    """        
 
     def __call__(self, sample):
         image, key_pts = sample['image'], sample['keypoints']
@@ -74,7 +78,8 @@ class Normalize(object):
 
 
 class Rescale(object):
-    """Rescale the image in a sample to a given size.
+    """
+    Rescale the image in a sample to a given size.
 
     Args:
         output_size (tuple or int): Desired output size. If tuple, output is
@@ -109,7 +114,8 @@ class Rescale(object):
 
 
 class RandomCrop(object):
-    """Crop randomly the image in a sample.
+    """
+    Crop randomly the image in a sample.
 
     Args:
         output_size (tuple or int): Desired output size. If int, square crop
@@ -142,7 +148,9 @@ class RandomCrop(object):
 
 
 class ToTensor(object):
-    """Convert ndarrays in sample to Tensors."""
+    """
+    Convert ndarrays in sample to Tensors.
+    """
 
     def __call__(self, sample):
         image, key_pts = sample['image'], sample['keypoints']
