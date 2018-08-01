@@ -1,3 +1,4 @@
 *.pyc
 .git
 .ipynb_checkpoints
+.idea
