@@ -28,9 +28,9 @@ class FacialKeypointsDataset(Dataset):
     def __len__(self):
         return len(self.key_pts_frame)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, index):
         image_name = os.path.join(self.root_dir,
-                                  self.key_pts_frame.iloc[idx, 0])
+                                  self.key_pts_frame.iloc[index, 0])
 
         image = mpimg.imread(image_name)
 
@@ -38,7 +38,7 @@ class FacialKeypointsDataset(Dataset):
         if image.shape[2] == 4:
             image = image[:, :, 0:3]
 
-        key_pts = self.key_pts_frame.iloc[idx, 1:].as_matrix()
+        key_pts = self.key_pts_frame.iloc[index, 1:].as_matrix()
         key_pts = key_pts.astype('float').reshape(-1, 2)
         sample = {'image': image, 'keypoints': key_pts}
 
@@ -90,7 +90,8 @@ class Rescale(object):
         self.output_size = output_size
 
     def __call__(self, sample):
-        image, key_pts = sample['image'], sample['keypoints']
+        image = sample['image']
+        key_pts = sample['keypoints']
 
         height, width = image.shape[:2]
         if isinstance(self.output_size, int):
@@ -144,7 +145,7 @@ class RandomCrop(object):
 
         image = image[top: top + new_height, left: left + new_width]
 
-        key_pts = key_pts - [left, top]
+        key_pts = key_pts - [left, top]  # Broadcasting
 
         return {'image': image,
                 'keypoints': key_pts}

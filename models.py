@@ -32,3 +32,116 @@ class Net(nn.Module):
 
         # a modified x, having gone through all the layers of your model, should be returned
         return x
+
+
+# Reference: https://arxiv.org/pdf/1710.00977.pdf
+class NaimishNet(nn.Module):
+    def __init__(self):
+        super(NaimishNet, self).__init__()
+
+        self.convolution_1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=4)
+        I.uniform_(self.convolution_1.weight)
+        self.maxpooling_1 = nn.MaxPool2d(kernel_size=2)
+        self.dropout_1 = nn.Dropout(p=0.1)
+
+        self.convolution_2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
+        I.uniform_(self.convolution_2.weight)
+        self.maxpooling_2 = nn.MaxPool2d(kernel_size=2)
+        self.dropout_2 = nn.Dropout(p=0.2)
+
+        self.convolution_3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=2)
+        I.uniform_(self.convolution_3.weight)
+        self.maxpooling_3 = nn.MaxPool2d(kernel_size=2)
+        self.dropout_3 = nn.Dropout(p=0.3)
+
+        self.convolution_4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=1)
+        I.uniform_(self.convolution_4.weight)
+        self.maxpooling_4 = nn.MaxPool2d(kernel_size=2)
+        self.dropout_4 = nn.Dropout(p=0.4)
+
+        self.fully_connected_1 = nn.Linear(in_features=43264, out_features=1000)
+        I.xavier_uniform_(self.fully_connected_1.weight)
+        self.dropout_5 = nn.Dropout(p=0.5)
+
+        self.fully_connected_2 = nn.Linear(in_features=1000, out_features=1000)
+        I.xavier_uniform_(self.fully_connected_2.weight)
+        self.dropout_6 = nn.Dropout(p=0.6)
+
+        self.fully_connected_3 = nn.Linear(in_features=1000, out_features=68 * 2)
+        I.xavier_uniform_(self.fully_connected_3.weight)
+
+    def forward(self, x):
+        x = self.convolution_1(x)
+        x = F.elu(x)
+        x = self.maxpooling_1(x)
+        x = self.dropout_1(x)
+
+        x = self.convolution_2(x)
+        x = F.elu(x)
+        x = self.maxpooling_2(x)
+        x = self.dropout_2(x)
+
+        x = self.convolution_3(x)
+        x = F.elu(x)
+        x = self.maxpooling_3(x)
+        x = self.dropout_3(x)
+
+        x = self.convolution_4(x)
+        x = F.elu(x)
+        x = self.maxpooling_4(x)
+        x = self.dropout_4(x)
+
+        # Flatten
+        x = x.view(x.size(0), -1)
+
+        x = self.fully_connected_1(x)
+        x = F.elu(x)
+        x = self.dropout_5(x)
+
+        x = self.fully_connected_2(x)
+        x = self.dropout_6(x)
+
+        x = self.fully_connected_3(x)
+        # a modified x, having gone through all the layers of your model, should be returned
+        return x
+
+
+if __name__ == "__main__":
+    model = NaimishNet()
+    print(model)
+
+    from data_load import Rescale, Normalize, ToTensor
+    from data_load import FacialKeypointsDataset
+    from torch.utils.data import Dataset, DataLoader
+    from utils import build_path
+    from torchvision import transforms, utils
+
+    data_transform = transforms.Compose([Rescale((224, 224)),
+                                         Normalize(),
+                                         ToTensor()])
+
+    RUNNING_ON_FLOYDHUB = False
+
+    keypoints_path = build_path('training_frames_keypoints.csv', RUNNING_ON_FLOYDHUB)
+    root_training_data_directory = build_path('training/', RUNNING_ON_FLOYDHUB)
+    transformed_dataset = FacialKeypointsDataset(csv_file=keypoints_path,
+                                                 root_dir=root_training_data_directory,
+                                                 transform=data_transform)
+
+    batch_size = 10
+
+    # num_workers = 4
+    num_workers = 0  # Windows ...
+    train_loader = DataLoader(transformed_dataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              num_workers=num_workers)
+
+    for i, sample in enumerate(train_loader):
+        images = sample['image']
+        key_points = sample['keypoints']
+
+        images = images.type(torch.FloatTensor)
+
+
+        model.forward(images)
