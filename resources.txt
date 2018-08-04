@@ -1,0 +1,2 @@
+http://flothesof.github.io/convnet-face-keypoint-detection.html
+https://arxiv.org/pdf/1710.00977.pdf
