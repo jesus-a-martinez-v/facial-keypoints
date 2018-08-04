@@ -1,37 +1,9 @@
-## TODO: define the convolutional neural network architecture
-
-import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-# can use the below import should you choose to initialize the weights of your Net
-import torch.nn.init as I
 
 
-class Net(nn.Module):
-
-    def __init__(self):
-        super(Net, self).__init__()
-
-        ## TODO: Define all the layers of this CNN, the only requirements are:
-        ## 1. This network takes in a square (same width and height), grayscale image as input
-        ## 2. It ends with a linear layer that represents the keypoints
-        ## it's suggested that you make this last layer output 136 values, 2 for each of the 68 keypoint (x, y) pairs
-
-        # As an example, you've been given a convolutional layer, which you may (but don't have to) change:
-        # 1 input image channel (grayscale), 32 output channels/feature maps, 5x5 square convolution kernel
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5)
-
-        ## Note that among the layers to add, consider including:
-        # maxpooling layers, multiple conv layers, fully-connected layers, and other layers (such as dropout or batch normalization) to avoid overfitting
-
-    def forward(self, x):
-        ## TODO: Define the feedforward behavior of this model
-        ## x is the input image and, as an example, here you may choose to include a pool/conv step:
-        ## x = self.pool(F.relu(self.conv1(x)))
-
-        # a modified x, having gone through all the layers of your model, should be returned
-        return x
+def _flatten(x):
+    return x.view(x.size(0), -1)
 
 
 # Reference: https://arxiv.org/pdf/1710.00977.pdf
@@ -92,7 +64,7 @@ class NaimishNet(nn.Module):
         x = self.dropout_4(x)
 
         # Flatten
-        x = x.view(x.size(0), -1)
+        x = _flatten(x)
 
         x = self.fully_connected_1(x)
         x = F.elu(x)
@@ -102,5 +74,42 @@ class NaimishNet(nn.Module):
         x = self.dropout_6(x)
 
         x = self.fully_connected_3(x)
+
+        return x
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+
+        self.convolution_1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5, stride=1)
+        # I.uniform_(self.convolution_1.weight)
+        self.maxpooling_1 = nn.MaxPool2d(kernel_size=2)
+
+        self.convolution_2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1)
+        self.maxpooling_2 = nn.MaxPool2d(kernel_size=2)
+
+        self.fully_connected_1 = nn.Linear(in_features=179776, out_features=512)
+        self.dropout_1 = nn.Dropout(0.5)
+
+        self.fully_connected_2 = nn.Linear(in_features=512, out_features=68 * 2)
+
+    def forward(self, x):
+        x = self.convolution_1(x)
+        x = F.relu(x)
+        x = self.maxpooling_1(x)
+
+        x = self.convolution_2(x)
+        x = F.relu(x)
+        x = self.maxpooling_2(x)
+
+        # Flatten
+        x = _flatten(x)
+
+        x = self.fully_connected_1(x)
+        x = F.relu(x)
+        x = self.dropout_1(x)
+
+        x = self.fully_connected_2(x)
 
         return x
