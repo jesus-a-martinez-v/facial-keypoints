@@ -5,6 +5,7 @@ import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
 import torch
+import random
 from torch.utils.data import Dataset
 
 
@@ -113,6 +114,26 @@ class Rescale(object):
 
         return {'image': rescaled_image,
                 'keypoints': key_pts}
+
+
+# class RandomHorizontalFlip(object):
+#     def __init__(self):
+#         self.flip_probability = 0.5
+#
+#     def __call__(self, sample):
+#         image = sample['image']
+#         key_pts = sample['keypoints']
+#
+#         do_flip = random.random() > self.flip_probability
+#
+#         if do_flip:
+#             flipped_image = cv2.flip(image, 0)
+#             flipped_keypoints = key_pts
+#
+#             return {'image': flipped_image,
+#                     'keypoints': flipped_keypoints}
+#         else:
+#             return sample
 
 
 class RandomCrop(object):
