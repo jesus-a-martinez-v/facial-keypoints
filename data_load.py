@@ -1,11 +1,11 @@
 import os
+import random
 
 import cv2
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
 import torch
-import random
 from torch.utils.data import Dataset
 
 
@@ -39,7 +39,7 @@ class FacialKeypointsDataset(Dataset):
         if image.shape[2] == 4:
             image = image[:, :, 0:3]
 
-        key_pts = self.key_pts_frame.iloc[index, 1:].as_matrix()
+        key_pts = self.key_pts_frame.iloc[index, 1:].values
         key_pts = key_pts.astype('float').reshape(-1, 2)
         sample = {'image': image, 'keypoints': key_pts}
 
@@ -116,24 +116,36 @@ class Rescale(object):
                 'keypoints': key_pts}
 
 
-# class RandomHorizontalFlip(object):
-#     def __init__(self):
-#         self.flip_probability = 0.5
-#
-#     def __call__(self, sample):
-#         image = sample['image']
-#         key_pts = sample['keypoints']
-#
-#         do_flip = random.random() > self.flip_probability
-#
-#         if do_flip:
-#             flipped_image = cv2.flip(image, 0)
-#             flipped_keypoints = key_pts
-#
-#             return {'image': flipped_image,
-#                     'keypoints': flipped_keypoints}
-#         else:
-#             return sample
+class RandomHorizontalFlip(object):
+    def __init__(self):
+        self.flip_probability = 0.5
+
+    def __call__(self, sample):
+        image = sample['image']
+        key_pts = sample['keypoints']
+
+        do_flip = random.random() > self.flip_probability
+
+        if do_flip:
+            width = image.shape[1]
+            center = width / 2
+
+            flipped_image = cv2.flip(image, 1)
+
+            def flip_keypoint_horizontally(p):
+                if p[0] < center:
+                    p[0] += 2 * abs(center - p[0])
+                else:
+                    p[0] -= 2 * abs(center - p[0])
+
+                return p
+
+            flipped_keypoints = np.array([flip_keypoint_horizontally(kp) for kp in key_pts])
+
+            return {'image': flipped_image,
+                    'keypoints': flipped_keypoints}
+        else:
+            return sample
 
 
 class RandomCrop(object):
